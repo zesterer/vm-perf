@@ -2,9 +2,27 @@
 
 extern crate test;
 use test::{Bencher, black_box};
-use vm_perf::{Expr, Vm, Walker, Bytecode, Closures, StackClosures, TapeClosures, RegisterClosures};
+use vm_perf::{
+    Expr,
+    Vm,
+    Walker,
+    Bytecode,
+    Closures,
+    StackClosures,
+    TapeClosures,
+    RegisterClosures,
+    BytecodeClosures,
+    TapeContinuations,
+};
 
 fn create_expr() -> Expr {
+    // let mut total = 0;
+    // let mut count = args[0];
+    // while count > 0 {
+    //     total = total + args[1];
+    //     count = count - 1;
+    // }
+    // total
     Expr::Let(
         Box::new(Expr::Litr(0)), // total
         Box::new(Expr::Then(
@@ -99,6 +117,12 @@ fn bench_execute<V: Vm>(b: &mut Bencher) {
 // Register closures
 #[bench] fn register_closures_compile(b: &mut Bencher) { bench_compile::<RegisterClosures>(b) }
 #[bench] fn register_closures_execute(b: &mut Bencher) { bench_execute::<RegisterClosures>(b) }
+// Bytecode closures
+#[bench] fn bytecode_closures_compile(b: &mut Bencher) { bench_compile::<BytecodeClosures>(b) }
+#[bench] fn bytecode_closures_execute(b: &mut Bencher) { bench_execute::<BytecodeClosures>(b) }
+// Bytecode closures
+#[bench] fn tape_continuations_compile(b: &mut Bencher) { bench_compile::<TapeContinuations>(b) }
+#[bench] fn tape_continuations_execute(b: &mut Bencher) { bench_execute::<TapeContinuations>(b) }
 
 // Pure Rust controls
 #[bench]

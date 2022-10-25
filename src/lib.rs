@@ -6,6 +6,8 @@ pub mod closures;
 pub mod stack_closures;
 pub mod tape_closures;
 pub mod register_closures;
+pub mod bytecode_closures;
+pub mod tape_continuations;
 
 pub use crate::{
     walker::Walker,
@@ -14,6 +16,8 @@ pub use crate::{
     stack_closures::StackClosures,
     tape_closures::TapeClosures,
     register_closures::RegisterClosures,
+    bytecode_closures::BytecodeClosures,
+    tape_continuations::TapeContinuations,
 };
 
 // Relative to the top of the locals stack

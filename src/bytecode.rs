@@ -29,7 +29,7 @@ impl Vm for Bytecode {
                 | Expr::Add(_, _) => true,
                 Expr::Let(_, expr) => returns(expr),
                 Expr::Set(_, _)
-                | Expr::While(_, _)=> false,
+                | Expr::While(_, _) => false,
                 Expr::Then(_, b) => returns(b),
             }
         }
