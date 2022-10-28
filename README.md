@@ -9,36 +9,39 @@ The benchmarks are not particularly scientific. Take them with a pinch of salt.
 Benchmarks were performed on a 16 core AMD Ryzen 7 3700X.
 
 ```
-test bytecode_closures_compile  ... bench:         449 ns/iter (+/- 15)
-test bytecode_closures_execute  ... bench:     291,392 ns/iter (+/- 19,659)
+test bytecode_closures_compile  ... bench:         494 ns/iter (+/- 13)
+test bytecode_closures_execute  ... bench:     280,765 ns/iter (+/- 7,800)
 
-test bytecode_compile           ... bench:         155 ns/iter (+/- 3)
-test bytecode_execute           ... bench:     147,675 ns/iter (+/- 28,828)
-
-test closures_compile           ... bench:         245 ns/iter (+/- 21)
-test closures_execute           ... bench:     160,676 ns/iter (+/- 17,143)
-
-test register_closures_compile  ... bench:         200 ns/iter (+/- 5)
-test register_closures_execute  ... bench:     133,603 ns/iter (+/- 4,014)
-
-test stack_closures_compile     ... bench:         498 ns/iter (+/- 8)
-test stack_closures_execute     ... bench:     290,284 ns/iter (+/- 36,228)
-
-test tape_closures_compile      ... bench:         133 ns/iter (+/- 11)
-test tape_closures_execute      ... bench:     214,571 ns/iter (+/- 7,067)
-
-test tape_continuations_compile ... bench:         169 ns/iter (+/- 1)
-test tape_continuations_execute ... bench:      88,928 ns/iter (+/- 10,945)
+test stack_closures_compile     ... bench:         438 ns/iter (+/- 18)
+test stack_closures_execute     ... bench:     279,784 ns/iter (+/- 3,791)
 
 test walker_compile             ... bench:           1 ns/iter (+/- 0)
-test walker_execute             ... bench:     242,589 ns/iter (+/- 11,180)
+test walker_execute             ... bench:     213,379 ns/iter (+/- 9,371)
 
-test rust_execute               ... bench:      17,530 ns/iter (+/- 899)
+test tape_closures_compile      ... bench:         129 ns/iter (+/- 8)
+test tape_closures_execute      ... bench:     197,569 ns/iter (+/- 2,564)
+
+test closures_compile           ... bench:         241 ns/iter (+/- 3)
+test closures_execute           ... bench:     141,209 ns/iter (+/- 1,893)
+
+test bytecode_compile           ... bench:         149 ns/iter (+/- 7)
+test bytecode_execute           ... bench:     137,548 ns/iter (+/- 27,235)
+
+test register_closures_compile  ... bench:         196 ns/iter (+/- 6)
+test register_closures_execute  ... bench:     128,609 ns/iter (+/- 3,827)
+
+test tape_continuations_compile ... bench:         138 ns/iter (+/- 9)
+test tape_continuations_execute ... bench:      40,653 ns/iter (+/- 1,087)
+
+test rust_execute               ... bench:      20,836 ns/iter (+/- 4,159)
 test rust_opt_execute           ... bench:           1 ns/iter (+/- 0)
 ```
 
 `rust_execute` and `rust_opt_execute` are 'standard candles', implemented in native Rust code. The former has very few
 optimisations applied, whereas the latter is permitted to take advantage of the full optimising power of LLVM.
+
+By *far* the fastest technique appears to be `tape_continuations` which uses a combination of direct threaded code
+along with some simpler register allocation to achieve speeds that start to approach that of native codegen.
 
 ## Setup
 
