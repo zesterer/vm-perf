@@ -42,6 +42,7 @@ impl Vm for Walker {
                     execute_inner(a, args, locals);
                     execute_inner(b, args, locals)
                 }
+                _ => todo!(),
             }
         }
 

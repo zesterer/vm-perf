@@ -37,6 +37,7 @@ impl Vm for BytecodeClosures {
                 Expr::Let(_, expr) => returns(expr),
                 Expr::Set(_, _) | Expr::While(_, _) => false,
                 Expr::Then(_, b) => returns(b),
+                _ => todo!(),
             }
         }
 
@@ -119,6 +120,7 @@ impl Vm for BytecodeClosures {
                     }
                     compile_inner(ops, b);
                 }
+                _ => todo!(),
             }
         }
 

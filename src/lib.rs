@@ -29,6 +29,8 @@ pub enum Expr {
     Set(LocalOffset, Box<Expr>), // i64 -> ()
     While(Box<Expr>, Box<Expr>), // i64 -> ? -> ()
     Then(Box<Expr>, Box<Expr>),  // ? -> ?
+    Throw(Box<Expr>),
+    Catch(Box<Expr>),
 }
 
 pub trait Vm {

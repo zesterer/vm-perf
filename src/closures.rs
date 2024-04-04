@@ -62,6 +62,7 @@ impl Vm for Closures {
                     b(args, locals)
                 })
             }
+            _ => todo!(),
         }
     }
 

@@ -114,6 +114,7 @@ impl Vm for RegisterClosures {
                     b(args, locals, r)
                 })
             }
+            _ => todo!(),
         }
     }
 

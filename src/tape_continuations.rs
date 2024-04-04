@@ -97,6 +97,7 @@ impl Vm for TapeContinuations {
                     Expr::Let(_, expr) => returns(expr),
                     Expr::Set(_, _) | Expr::While(_, _) => false,
                     Expr::Then(_, b) => returns(b),
+                    _ => todo!(),
                 }
             }
 
@@ -261,6 +262,7 @@ impl Vm for TapeContinuations {
                     compile_inner(ops, a, scope);
                     compile_inner(ops, b, scope);
                 },
+                _ => todo!(),
             }
         }
 

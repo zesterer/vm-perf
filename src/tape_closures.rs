@@ -124,6 +124,7 @@ impl Vm for TapeClosures {
                     compile_inner(ops, a);
                     compile_inner(ops, b);
                 }
+                _ => todo!(),
             }
         }
 
