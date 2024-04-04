@@ -23,13 +23,9 @@ impl Vm for Bytecode {
     fn compile(expr: &Expr) -> Self::Program<'_> {
         fn returns(expr: &Expr) -> bool {
             match expr {
-                Expr::Litr(_)
-                | Expr::Arg(_)
-                | Expr::Get(_)
-                | Expr::Add(_, _) => true,
+                Expr::Litr(_) | Expr::Arg(_) | Expr::Get(_) | Expr::Add(_, _) => true,
                 Expr::Let(_, expr) => returns(expr),
-                Expr::Set(_, _)
-                | Expr::While(_, _) => false,
+                Expr::Set(_, _) | Expr::While(_, _) => false,
                 Expr::Then(_, b) => returns(b),
             }
         }
@@ -43,17 +39,17 @@ impl Vm for Bytecode {
                     compile_inner(ops, x);
                     compile_inner(ops, y);
                     ops.push(Op::Add);
-                },
+                }
                 Expr::Let(rhs, then) => {
                     compile_inner(ops, rhs);
                     ops.push(Op::PushLocal);
                     compile_inner(ops, then);
                     ops.push(Op::PopLocal);
-                },
+                }
                 Expr::Set(local, rhs) => {
                     compile_inner(ops, rhs);
                     ops.push(Op::SetLocal(*local));
-                },
+                }
                 Expr::While(pred, body) => {
                     let start = ops.len();
                     compile_inner(ops, pred);
@@ -65,14 +61,14 @@ impl Vm for Bytecode {
                     }
                     ops.push(Op::Jmp(start));
                     ops[branch_fixup] = Op::JmpZN(ops.len());
-                },
+                }
                 Expr::Then(a, b) => {
                     compile_inner(ops, a);
                     if returns(a) {
                         ops.push(Op::Pop);
                     }
                     compile_inner(ops, b);
-                },
+                }
             }
         }
 
@@ -100,20 +96,26 @@ impl Vm for Bytecode {
                     let x = stack.pop().unwrap_unchecked();
                     let y = stack.pop().unwrap_unchecked();
                     stack.push(x + y);
-                },
+                }
                 Op::PushLocal => locals.push(stack.pop().unwrap_unchecked()),
-                Op::PopLocal => unsafe { locals.pop().unwrap_unchecked(); },
+                Op::PopLocal => unsafe {
+                    locals.pop().unwrap_unchecked();
+                },
                 Op::SetLocal(local) => {
                     let rhs = stack.pop().unwrap_unchecked();
                     let local_offs = locals.len() - local - 1;
-                    unsafe { *locals.get_unchecked_mut(local_offs) = rhs; }
+                    unsafe {
+                        *locals.get_unchecked_mut(local_offs) = rhs;
+                    }
+                }
+                Op::Pop => unsafe {
+                    stack.pop().unwrap_unchecked();
                 },
-                Op::Pop => unsafe { stack.pop().unwrap_unchecked(); },
                 Op::JmpZN(goto) => {
                     if stack.pop().unwrap_unchecked() <= 0 {
                         ip = *goto;
                     }
-                },
+                }
                 Op::Jmp(goto) => ip = *goto,
                 Op::Ret => break stack.pop().unwrap_unchecked(),
             }
