@@ -2,12 +2,15 @@ use super::*;
 
 pub struct StackClosures;
 
-type OpFn<'a> = Box<dyn Fn(
-    &[i64], // args
-    &mut usize, // ip
-    &mut Vec<i64>, // stack
-    &mut Vec<i64>, // locals
-) -> Option<i64> + 'a>;
+type OpFn<'a> = Box<
+    dyn Fn(
+            &[i64],        // args
+            &mut usize,    // ip
+            &mut Vec<i64>, // stack
+            &mut Vec<i64>, // locals
+        ) -> Option<i64>
+        + 'a,
+>;
 
 impl Vm for StackClosures {
     type Program<'a> = Vec<OpFn<'a>>;
@@ -15,13 +18,9 @@ impl Vm for StackClosures {
     fn compile(expr: &Expr) -> Self::Program<'_> {
         fn returns(expr: &Expr) -> bool {
             match expr {
-                Expr::Litr(_)
-                | Expr::Arg(_)
-                | Expr::Get(_)
-                | Expr::Add(_, _) => true,
+                Expr::Litr(_) | Expr::Arg(_) | Expr::Get(_) | Expr::Add(_, _) => true,
                 Expr::Let(_, expr) => returns(expr),
-                Expr::Set(_, _)
-                | Expr::While(_, _)=> false,
+                Expr::Set(_, _) | Expr::While(_, _) => false,
                 Expr::Then(_, b) => returns(b),
             }
         }
@@ -33,11 +32,15 @@ impl Vm for StackClosures {
                     None
                 })),
                 Expr::Arg(idx) => ops.push(Box::new(move |args, _, stack, _| {
-                    unsafe { stack.push(*args.get_unchecked(*idx)); }
+                    unsafe {
+                        stack.push(*args.get_unchecked(*idx));
+                    }
                     None
                 })),
                 Expr::Get(local) => ops.push(Box::new(move |_, _, stack, locals| {
-                    unsafe { stack.push(*locals.get_unchecked(locals.len() - local - 1)); }
+                    unsafe {
+                        stack.push(*locals.get_unchecked(locals.len() - local - 1));
+                    }
                     None
                 })),
                 Expr::Add(x, y) => {
@@ -51,7 +54,7 @@ impl Vm for StackClosures {
                         }
                         None
                     }))
-                },
+                }
                 Expr::Let(rhs, then) => {
                     compile_inner(ops, rhs);
                     ops.push(Box::new(move |_, _, stack, locals| {
@@ -63,10 +66,12 @@ impl Vm for StackClosures {
                     }));
                     compile_inner(ops, then);
                     ops.push(Box::new(move |_, _, _, locals| {
-                        unsafe { locals.pop().unwrap_unchecked(); }
+                        unsafe {
+                            locals.pop().unwrap_unchecked();
+                        }
                         None
                     }));
-                },
+                }
                 Expr::Set(local, rhs) => {
                     compile_inner(ops, rhs);
                     ops.push(Box::new(move |_, _, stack, locals| {
@@ -77,7 +82,7 @@ impl Vm for StackClosures {
                         }
                         None
                     }));
-                },
+                }
                 Expr::While(pred, body) => {
                     let start = ops.len();
                     compile_inner(ops, pred);
@@ -86,7 +91,9 @@ impl Vm for StackClosures {
                     compile_inner(ops, body);
                     if returns(body) {
                         ops.push(Box::new(move |_, _, stack, _| {
-                            unsafe { stack.pop().unwrap_unchecked(); }
+                            unsafe {
+                                stack.pop().unwrap_unchecked();
+                            }
                             None
                         }));
                     }
@@ -104,17 +111,19 @@ impl Vm for StackClosures {
                         }
                         None
                     });
-                },
+                }
                 Expr::Then(a, b) => {
                     compile_inner(ops, a);
                     if returns(a) {
                         ops.push(Box::new(move |_, _, stack, _| {
-                            unsafe { stack.pop().unwrap_unchecked(); }
+                            unsafe {
+                                stack.pop().unwrap_unchecked();
+                            }
                             None
                         }));
                     }
                     compile_inner(ops, b);
-                },
+                }
             }
         }
 
@@ -122,8 +131,8 @@ impl Vm for StackClosures {
 
         compile_inner(&mut ops, expr);
 
-        ops.push(Box::new(move |_, _, stack, _| {
-            unsafe { Some(stack.pop().unwrap_unchecked()) }
+        ops.push(Box::new(move |_, _, stack, _| unsafe {
+            Some(stack.pop().unwrap_unchecked())
         }));
 
         ops

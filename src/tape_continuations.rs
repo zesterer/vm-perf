@@ -51,10 +51,20 @@ impl<'a> Tape<'a> {
         f(reg, args, self, stack)
     }
     #[inline(always)]
-    unsafe fn next_int(&mut self) -> i64 { self.0 = self.0.add(1); std::mem::transmute(self.0.read()) }
-    unsafe fn next_usize(&mut self) -> usize { self.0 = self.0.add(1); self.0.read() }
-    unsafe fn skip(&mut self, n: usize) { self.0 = self.0.add(n); }
-    unsafe fn unskip(&mut self, n: usize) { self.0 = self.0.sub(n); }
+    unsafe fn next_int(&mut self) -> i64 {
+        self.0 = self.0.add(1);
+        std::mem::transmute(self.0.read())
+    }
+    unsafe fn next_usize(&mut self) -> usize {
+        self.0 = self.0.add(1);
+        self.0.read()
+    }
+    unsafe fn skip(&mut self, n: usize) {
+        self.0 = self.0.add(n);
+    }
+    unsafe fn unskip(&mut self, n: usize) {
+        self.0 = self.0.sub(n);
+    }
 }
 
 impl Vm for TapeContinuations {
@@ -83,13 +93,9 @@ impl Vm for TapeContinuations {
         fn compile_inner(ops: &mut Vec<usize>, expr: &Expr, scope: &Scope) {
             fn returns(expr: &Expr) -> bool {
                 match expr {
-                    Expr::Litr(_)
-                    | Expr::Arg(_)
-                    | Expr::Get(_)
-                    | Expr::Add(_, _) => true,
+                    Expr::Litr(_) | Expr::Arg(_) | Expr::Get(_) | Expr::Add(_, _) => true,
                     Expr::Let(_, expr) => returns(expr),
-                    Expr::Set(_, _)
-                    | Expr::While(_, _) => false,
+                    Expr::Set(_, _) | Expr::While(_, _) => false,
                     Expr::Then(_, b) => returns(b),
                 }
             }
@@ -271,8 +277,7 @@ impl Vm for TapeContinuations {
     unsafe fn execute(prog: &Self::Program<'_>, args: &[i64]) -> i64 {
         let stack_raw = Box::into_raw(vec![0i64; 1024].into_boxed_slice());
         let mut stack = Stack(stack_raw as _);
-        Tape(prog.as_ptr(), PhantomData)
-            .this_eval(Reg::default(), args.as_ptr(), stack);
+        Tape(prog.as_ptr(), PhantomData).this_eval(Reg::default(), args.as_ptr(), stack);
         (*stack_raw)[0]
     }
 }
