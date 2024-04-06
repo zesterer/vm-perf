@@ -9,44 +9,45 @@ The benchmarks are not particularly scientific. Take them with a pinch of salt.
 Benchmarks were performed on a 16 core AMD Ryzen 7 3700X.
 
 ```
-test bytecode_closures_compile     ... bench:         414 ns/iter (+/- 16)
-test bytecode_closures_execute     ... bench:     247,121 ns/iter (+/- 7,871)
+test bytecode_closures_compile           ... bench:         442 ns/iter (+/- 9)
+test bytecode_closures_execute           ... bench:     278,186 ns/iter (+/- 3,722)
 
-test bytecode_compile              ... bench:         150 ns/iter (+/- 2)
-test bytecode_execute              ... bench:     218,092 ns/iter (+/- 13,923)
+test bytecode_compile                    ... bench:         170 ns/iter (+/- 4)
+test bytecode_execute                    ... bench:     135,355 ns/iter (+/- 17,387)
 
-test closure_continuations_compile ... bench:         209 ns/iter (+/- 13)
-test closure_continuations_execute ... bench:      56,502 ns/iter (+/- 11,647)
+test closure_continuations_compile       ... bench:         397 ns/iter (+/- 12)
+test closure_continuations_execute       ... bench:      38,407 ns/iter (+/- 420)
 
-test closures_compile              ... bench:         250 ns/iter (+/- 9)
-test closures_execute              ... bench:     136,518 ns/iter (+/- 4,269)
+test closure_stack_continuations_compile ... bench:         408 ns/iter (+/- 11)
+test closure_stack_continuations_execute ... bench:      55,867 ns/iter (+/- 974)
 
-test register_closures_compile     ... bench:         173 ns/iter (+/- 7)
-test register_closures_execute     ... bench:      79,985 ns/iter (+/- 2,076)
+test closures_compile                    ... bench:         230 ns/iter (+/- 1)
+test closures_execute                    ... bench:     137,376 ns/iter (+/- 1,448)
 
-test stack_closures_compile        ... bench:         422 ns/iter (+/- 29)
-test stack_closures_execute        ... bench:     246,977 ns/iter (+/- 11,115)
+test register_closures_compile           ... bench:         154 ns/iter (+/- 4)
+test register_closures_execute           ... bench:      79,356 ns/iter (+/- 2,885)
 
-test tape_closures_compile         ... bench:         116 ns/iter (+/- 4)
-test tape_closures_execute         ... bench:     142,617 ns/iter (+/- 6,584)
+test stack_closures_compile              ... bench:         502 ns/iter (+/- 9)
+test stack_closures_execute              ... bench:     269,112 ns/iter (+/- 4,937)
 
-test tape_continuations_compile    ... bench:         117 ns/iter (+/- 1)
-test tape_continuations_execute    ... bench:      42,710 ns/iter (+/- 1,547)
+test tape_closures_compile               ... bench:         192 ns/iter (+/- 5)
+test tape_closures_execute               ... bench:     206,273 ns/iter (+/- 10,550)
 
-test walker_compile                ... bench:           0 ns/iter (+/- 0)
-test walker_execute                ... bench:     210,845 ns/iter (+/- 3,498)
+test tape_continuations_compile          ... bench:         198 ns/iter (+/- 2)
+test tape_continuations_execute          ... bench:      42,758 ns/iter (+/- 899)
 
+test walker_compile                      ... bench:           0 ns/iter (+/- 0)
+test walker_execute                      ... bench:     219,535 ns/iter (+/- 9,767)
 
-
-test rust_execute                  ... bench:      14,829 ns/iter (+/- 843)
-test rust_opt_execute              ... bench:           0 ns/iter (+/- 0)
+test rust_execute                        ... bench:      16,755 ns/iter (+/- 222)
+test rust_opt_execute                    ... bench:           1 ns/iter (+/- 0)
 ```
 
 `rust_execute` and `rust_opt_execute` are 'standard candles', implemented in native Rust code. The former has very few
 optimisations applied, whereas the latter is permitted to take advantage of the full optimising power of LLVM.
 
-By *far* the fastest technique appears to be `tape_continuations` which uses a combination of direct threaded code
-along with some simpler register allocation to achieve speeds that start to approach that of native codegen.
+The fastest technique appears to be [`closure_continuations`](#closure_continuations). It manages to achieve very
+respectable performance, coming within spitting difference of (deoptimised) native code.
 
 ## Setup
 
@@ -74,15 +75,26 @@ A simple AST walker. Compilation is an identity function. AST evaluation is done
 A naive stack 'bytecode' interpreter. Compilation takes the AST and translates it into a list of instructions. Execution
 operates upon the stack, pushing and popping values.
 
+### `closures`
+
+Uses simple indirect threading, 'compiling' the entire program into a deeply nested closure. Execution simply evaluates
+the closure.
+
 ### `closure_continuations`
 
 Shares much of the simplicity of `closures`, but passes the next instruction to be performed - if any - as a continuation,
 allowing for tail-call optimisation (TCO) to occur in a substantial number of cases.
 
-### `closures`
+### `closure_stack_continuations`
 
-Uses simple indirect threading, 'compiling' the entire program into a deeply nested closure. Execution simply evaluates
-the closure.
+Just like `closure_continuations`, except it uses a stack to pass values around. This can improve the ability to perform
+tail-call optimisations (TCO), at the cost of needing to touch memory when manipulating values. It's possible that some
+combination of both approaches might hit an even nicer sweet spot.
+
+### `bytecode_closures`
+
+A mix between `bytecode` and `closures`. The AST is compiled down to a series of instruction-like closures, which are
+then executed in a loop and indexed via an instruction pointer.
 
 ### `stack_closures`
 
@@ -98,11 +110,6 @@ of static data at execution time.
 
 Like `closures`, except the 2 highest most recently created locals are passed through the closures as arguments, rather
 than being maintained on the locals stack.
-
-### `bytecode_closures`
-
-A mix between `bytecode` and `closures`. The AST is compiled down to a series of instruction-like closures, which are
-then executed in a loop and indexed via an instruction pointer.
 
 ### `tape_continuations`
 

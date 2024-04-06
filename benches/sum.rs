@@ -3,8 +3,8 @@
 extern crate test;
 use test::{black_box, Bencher};
 use vm_perf::{
-    Bytecode, BytecodeClosures, ClosureContinuations, Closures, Expr, RegisterClosures,
-    StackClosures, TapeClosures, TapeContinuations, Vm, Walker,
+    Bytecode, BytecodeClosures, ClosureContinuations, ClosureStackContinuations, Closures, Expr,
+    RegisterClosures, StackClosures, TapeClosures, TapeContinuations, Vm, Walker,
 };
 
 fn create_expr() -> Expr {
@@ -171,6 +171,15 @@ fn closure_continuations_compile(b: &mut Bencher) {
 #[bench]
 fn closure_continuations_execute(b: &mut Bencher) {
     bench_execute::<ClosureContinuations>(b)
+}
+// Closure stack continuations
+#[bench]
+fn closure_stack_continuations_compile(b: &mut Bencher) {
+    bench_compile::<ClosureStackContinuations>(b)
+}
+#[bench]
+fn closure_stack_continuations_execute(b: &mut Bencher) {
+    bench_execute::<ClosureStackContinuations>(b)
 }
 
 // Pure Rust controls

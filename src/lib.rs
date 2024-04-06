@@ -3,6 +3,7 @@
 pub mod bytecode;
 pub mod bytecode_closures;
 pub mod closure_continuations;
+pub mod closure_stack_continuations;
 pub mod closures;
 pub mod register_closures;
 pub mod stack_closures;
@@ -12,7 +13,8 @@ pub mod walker;
 
 pub use crate::{
     bytecode::Bytecode, bytecode_closures::BytecodeClosures,
-    closure_continuations::ClosureContinuations, closures::Closures,
+    closure_continuations::ClosureContinuations,
+    closure_stack_continuations::ClosureStackContinuations, closures::Closures,
     register_closures::RegisterClosures, stack_closures::StackClosures,
     tape_closures::TapeClosures, tape_continuations::TapeContinuations, walker::Walker,
 };

@@ -102,16 +102,26 @@ impl Vm for TapeContinuations {
 
             match expr {
                 Expr::Litr(x) => {
-                    unsafe fn litr(mut reg: Reg, args: *const i64, mut tape: Tape, mut stack: Stack) {
+                    unsafe fn litr(
+                        mut reg: Reg,
+                        args: *const i64,
+                        mut tape: Tape,
+                        mut stack: Stack,
+                    ) {
                         let x = tape.next_int();
                         reg.r0 = x;
                         tape.next_eval(reg, args, stack);
                     }
                     ops.push(unsafe { std::mem::transmute(litr as OpFn) });
                     ops.push(*x as usize);
-                },
+                }
                 Expr::Arg(idx) => {
-                    unsafe fn arg(mut reg: Reg, args: *const i64, mut tape: Tape, mut stack: Stack) {
+                    unsafe fn arg(
+                        mut reg: Reg,
+                        args: *const i64,
+                        mut tape: Tape,
+                        mut stack: Stack,
+                    ) {
                         let idx = tape.next_usize();
                         let x = args.add(idx).read();
                         reg.r0 = x;
@@ -119,9 +129,14 @@ impl Vm for TapeContinuations {
                     }
                     ops.push(unsafe { std::mem::transmute(arg as OpFn) });
                     ops.push(*idx);
-                },
+                }
                 Expr::Get(local) => {
-                    unsafe fn get(mut reg: Reg, args: *const i64, mut tape: Tape, mut stack: Stack) {
+                    unsafe fn get(
+                        mut reg: Reg,
+                        args: *const i64,
+                        mut tape: Tape,
+                        mut stack: Stack,
+                    ) {
                         let local = tape.next_usize();
                         let x = stack.get_offset(local);
                         reg.r0 = x;
@@ -129,18 +144,28 @@ impl Vm for TapeContinuations {
                     }
                     ops.push(unsafe { std::mem::transmute(get as OpFn) });
                     ops.push(scope.local_offset_to_stack_offset(*local) + 1);
-                },
+                }
                 Expr::Add(x, y) => match &**y {
                     Expr::Litr(1) => {
-                        unsafe fn add_one(mut reg: Reg, args: *const i64, tape: Tape, mut stack: Stack) {
+                        unsafe fn add_one(
+                            mut reg: Reg,
+                            args: *const i64,
+                            tape: Tape,
+                            mut stack: Stack,
+                        ) {
                             reg.r0 += 1;
                             tape.next_eval(reg, args, stack)
                         }
                         compile_inner(ops, x, scope);
                         ops.push(unsafe { std::mem::transmute(add_one as OpFn) });
-                    },
+                    }
                     Expr::Litr(y) => {
-                        unsafe fn add_litr(mut reg: Reg, args: *const i64, mut tape: Tape, mut stack: Stack) {
+                        unsafe fn add_litr(
+                            mut reg: Reg,
+                            args: *const i64,
+                            mut tape: Tape,
+                            mut stack: Stack,
+                        ) {
                             let y = tape.next_int();
                             reg.r0 += y;
                             tape.next_eval(reg, args, stack)
@@ -148,22 +173,37 @@ impl Vm for TapeContinuations {
                         compile_inner(ops, x, scope);
                         ops.push(unsafe { std::mem::transmute(add_litr as OpFn) });
                         ops.push(*y as usize);
-                    },
+                    }
                     Expr::Arg(1) => {
-                        unsafe fn add_arg1(mut reg: Reg, args: *const i64, mut tape: Tape, mut stack: Stack) {
+                        unsafe fn add_arg1(
+                            mut reg: Reg,
+                            args: *const i64,
+                            mut tape: Tape,
+                            mut stack: Stack,
+                        ) {
                             let y = args.add(1).read();
                             reg.r0 += y;
                             tape.next_eval(reg, args, stack)
                         }
                         compile_inner(ops, x, scope);
                         ops.push(unsafe { std::mem::transmute(add_arg1 as OpFn) });
-                    },
+                    }
                     _ => {
-                        unsafe fn add_swap(mut reg: Reg, args: *const i64, tape: Tape, mut stack: Stack) {
+                        unsafe fn add_swap(
+                            mut reg: Reg,
+                            args: *const i64,
+                            tape: Tape,
+                            mut stack: Stack,
+                        ) {
                             stack.push(reg.r0);
                             tape.next_eval(reg, args, stack)
                         }
-                        unsafe fn add(mut reg: Reg, args: *const i64, tape: Tape, mut stack: Stack) {
+                        unsafe fn add(
+                            mut reg: Reg,
+                            args: *const i64,
+                            tape: Tape,
+                            mut stack: Stack,
+                        ) {
                             let y = stack.pop();
                             reg.r0 += y;
                             tape.next_eval(reg, args, stack)
@@ -172,7 +212,7 @@ impl Vm for TapeContinuations {
                         ops.push(unsafe { std::mem::transmute(add_swap as OpFn) });
                         compile_inner(ops, y, &Scope::Intermediate(scope));
                         ops.push(unsafe { std::mem::transmute(add as OpFn) });
-                    },
+                    }
                 },
                 Expr::Let(rhs, then) => {
                     compile_inner(ops, rhs, scope);
@@ -187,52 +227,78 @@ impl Vm for TapeContinuations {
                         tape.next_eval(reg, args, stack)
                     }
                     ops.push(unsafe { std::mem::transmute(let_pop as OpFn) });
-                },
-                Expr::Set(local, rhs) => if let Expr::Add(a, b) = &**rhs
-                    && let Expr::Get(y) = &**a
-                    && local == y
-                {
-                    compile_inner(ops, b, scope);
-                    let local_offset = scope.local_offset_to_stack_offset(*local);
-                    unsafe fn add_assign_at<const N: usize>(reg: Reg, args: *const i64, tape: Tape, mut stack: Stack) {
-                        let b = reg.r0;
-                        let a = stack.get_offset(N + 1);
-                        stack.set_offset(N + 1, a + b);
-                        tape.next_eval(reg, args, stack)
-                    }
-                    match local_offset {
-                        0 => ops.push(unsafe { std::mem::transmute(add_assign_at::<0> as OpFn) }),
-                        1 => ops.push(unsafe { std::mem::transmute(add_assign_at::<1> as OpFn) }),
-                        _ => {
-                            unsafe fn add_assign(reg: Reg, args: *const i64, mut tape: Tape, mut stack: Stack) {
-                                let local = tape.next_usize();
-                                // let b = stack.pop();
-                                let b = reg.r0;
-                                let a = stack.get_offset(local);
-                                stack.set_offset(local, a + b);
-                                tape.next_eval(reg, args, stack)
+                }
+                Expr::Set(local, rhs) => {
+                    if let Expr::Add(a, b) = &**rhs
+                        && let Expr::Get(y) = &**a
+                        && local == y
+                    {
+                        compile_inner(ops, b, scope);
+                        let local_offset = scope.local_offset_to_stack_offset(*local);
+                        unsafe fn add_assign_at<const N: usize>(
+                            reg: Reg,
+                            args: *const i64,
+                            tape: Tape,
+                            mut stack: Stack,
+                        ) {
+                            let b = reg.r0;
+                            let a = stack.get_offset(N + 1);
+                            stack.set_offset(N + 1, a + b);
+                            tape.next_eval(reg, args, stack)
+                        }
+                        match local_offset {
+                            0 => {
+                                ops.push(unsafe { std::mem::transmute(add_assign_at::<0> as OpFn) })
                             }
-                            ops.push(unsafe { std::mem::transmute(add_assign as OpFn) });
-                            ops.push(local_offset + 1);
-                        },
+                            1 => {
+                                ops.push(unsafe { std::mem::transmute(add_assign_at::<1> as OpFn) })
+                            }
+                            _ => {
+                                unsafe fn add_assign(
+                                    reg: Reg,
+                                    args: *const i64,
+                                    mut tape: Tape,
+                                    mut stack: Stack,
+                                ) {
+                                    let local = tape.next_usize();
+                                    // let b = stack.pop();
+                                    let b = reg.r0;
+                                    let a = stack.get_offset(local);
+                                    stack.set_offset(local, a + b);
+                                    tape.next_eval(reg, args, stack)
+                                }
+                                ops.push(unsafe { std::mem::transmute(add_assign as OpFn) });
+                                ops.push(local_offset + 1);
+                            }
+                        }
+                    } else {
+                        unsafe fn set(
+                            reg: Reg,
+                            args: *const i64,
+                            mut tape: Tape,
+                            mut stack: Stack,
+                        ) {
+                            let local = tape.next_usize();
+                            let x = reg.r0;
+                            stack.set_offset(local, x);
+                            tape.next_eval(reg, args, stack)
+                        }
+                        compile_inner(ops, rhs, scope);
+                        ops.push(unsafe { std::mem::transmute(set as OpFn) });
+                        ops.push(scope.local_offset_to_stack_offset(*local) + 1);
                     }
-                } else {
-                    unsafe fn set(reg: Reg, args: *const i64, mut tape: Tape, mut stack: Stack) {
-                        let local = tape.next_usize();
-                        let x = reg.r0;
-                        stack.set_offset(local, x);
-                        tape.next_eval(reg, args, stack)
-                    }
-                    compile_inner(ops, rhs, scope);
-                    ops.push(unsafe { std::mem::transmute(set as OpFn) });
-                    ops.push(scope.local_offset_to_stack_offset(*local) + 1);
-                },
+                }
                 Expr::While(pred, body) => {
                     // Pred
                     let start = ops.len();
                     compile_inner(ops, pred, scope);
                     // Check
-                    unsafe fn while_pred(reg: Reg, args: *const i64, mut tape: Tape, mut stack: Stack) {
+                    unsafe fn while_pred(
+                        reg: Reg,
+                        args: *const i64,
+                        mut tape: Tape,
+                        mut stack: Stack,
+                    ) {
                         let end_skip = tape.next_usize();
                         let pred = reg.r0;
                         if pred <= 0 {
@@ -247,7 +313,12 @@ impl Vm for TapeContinuations {
                     // Body
                     compile_inner(ops, body, scope);
                     // Loop
-                    unsafe fn while_loop(reg: Reg, args: *const i64, mut tape: Tape, mut stack: Stack) {
+                    unsafe fn while_loop(
+                        reg: Reg,
+                        args: *const i64,
+                        mut tape: Tape,
+                        mut stack: Stack,
+                    ) {
                         let unskip = tape.next_usize();
                         tape.unskip(unskip);
                         tape.next_eval(reg, args, stack)
@@ -256,11 +327,11 @@ impl Vm for TapeContinuations {
                     ops.push(ops.len() - start + 1);
                     // Fixup
                     ops[end_fixup] = ops.len() - body_start;
-                },
+                }
                 Expr::Then(a, b) => {
                     compile_inner(ops, a, scope);
                     compile_inner(ops, b, scope);
-                },
+                }
             }
         }
 
