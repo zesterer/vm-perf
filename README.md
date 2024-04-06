@@ -9,37 +9,39 @@ The benchmarks are not particularly scientific. Take them with a pinch of salt.
 Benchmarks were performed on a 16 core AMD Ryzen 7 3700X.
 
 ```
-test bytecode_closures_compile           ... bench:         442 ns/iter (+/- 9)
-test bytecode_closures_execute           ... bench:     278,186 ns/iter (+/- 3,722)
+test bytecode_closures_compile           ... bench:         440 ns/iter (+/- 5)
+test bytecode_closures_execute           ... bench:     272,928 ns/iter (+/- 6,565)
 
 test bytecode_compile                    ... bench:         170 ns/iter (+/- 4)
-test bytecode_execute                    ... bench:     135,355 ns/iter (+/- 17,387)
+test bytecode_execute                    ... bench:     133,028 ns/iter (+/- 18,037)
 
-test closure_continuations_compile       ... bench:         397 ns/iter (+/- 12)
-test closure_continuations_execute       ... bench:      38,407 ns/iter (+/- 420)
+test closure_continuations_compile       ... bench:         400 ns/iter (+/- 12)
+test closure_continuations_execute       ... bench:      38,501 ns/iter (+/- 1,162)
 
-test closure_stack_continuations_compile ... bench:         408 ns/iter (+/- 11)
-test closure_stack_continuations_execute ... bench:      55,867 ns/iter (+/- 974)
+test closure_stack_continuations_compile ... bench:         407 ns/iter (+/- 13)
+test closure_stack_continuations_execute ... bench:      55,571 ns/iter (+/- 800)
 
-test closures_compile                    ... bench:         230 ns/iter (+/- 1)
-test closures_execute                    ... bench:     137,376 ns/iter (+/- 1,448)
+test closures_compile                    ... bench:         348 ns/iter (+/- 41)
+test closures_execute                    ... bench:      80,409 ns/iter (+/- 547)
 
-test register_closures_compile           ... bench:         154 ns/iter (+/- 4)
-test register_closures_execute           ... bench:      79,356 ns/iter (+/- 2,885)
+test register_closures_compile           ... bench:         158 ns/iter (+/- 3)
+test register_closures_execute           ... bench:      83,567 ns/iter (+/- 3,280)
 
-test stack_closures_compile              ... bench:         502 ns/iter (+/- 9)
-test stack_closures_execute              ... bench:     269,112 ns/iter (+/- 4,937)
+test stack_closures_compile              ... bench:         501 ns/iter (+/- 14)
+test stack_closures_execute              ... bench:     274,446 ns/iter (+/- 3,623)
 
-test tape_closures_compile               ... bench:         192 ns/iter (+/- 5)
-test tape_closures_execute               ... bench:     206,273 ns/iter (+/- 10,550)
+test tape_closures_compile               ... bench:         146 ns/iter (+/- 8)
+test tape_closures_execute               ... bench:     199,621 ns/iter (+/- 1,932)
 
-test tape_continuations_compile          ... bench:         198 ns/iter (+/- 2)
-test tape_continuations_execute          ... bench:      42,758 ns/iter (+/- 899)
+test tape_continuations_compile          ... bench:         148 ns/iter (+/- 2)
+test tape_continuations_execute          ... bench:      42,476 ns/iter (+/- 1,298)
 
 test walker_compile                      ... bench:           0 ns/iter (+/- 0)
-test walker_execute                      ... bench:     219,535 ns/iter (+/- 9,767)
+test walker_execute                      ... bench:     242,722 ns/iter (+/- 6,891)
 
-test rust_execute                        ... bench:      16,755 ns/iter (+/- 222)
+
+
+test rust_execute                        ... bench:      17,104 ns/iter (+/- 4,848)
 test rust_opt_execute                    ... bench:           1 ns/iter (+/- 0)
 ```
 
